@@ -28,30 +28,34 @@
     };
   </script>
 
-  <!-- Google Fonts: Inter -->
+  <!-- Google Fonts: Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
   <!-- Custom Stylesheet (External Link + Inline Fallback for file:// CORS safety) -->
   <link rel="stylesheet" href="styles.css">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
     :root {
       --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', Menlo, Monaco, Consolas, monospace;
     }
     body {
       font-family: var(--font-sans);
       background-color: #f8fafc;
-      color: #1e293b;
+      color: #0f172a;
       margin: 0;
       padding: 0;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
+    code, pre, .font-mono {
+      font-family: var(--font-mono);
+    }
     ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
+      width: 5px;
+      height: 5px;
     }
     ::-webkit-scrollbar-track {
       background: transparent;
@@ -64,17 +68,55 @@
       background: #94a3b8;
     }
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
+      from { opacity: 0; transform: translateY(3px); }
       to { opacity: 1; transform: translateY(0); }
     }
     .animate-fadeIn {
-      animation: fadeIn 0.25s ease-out forwards;
+      animation: fadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
-    .badge-draft { background-color: #f1f5f9; color: #475569; border-color: #cbd5e1; }
-    .badge-in_review { background-color: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
-    .badge-pending_approval { background-color: #fffbeb; color: #b45309; border-color: #fde68a; }
-    .badge-approved { background-color: #ecfdf5; color: #047857; border-color: #a7f3d0; }
-    .badge-sent_back { background-color: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+    /* GitHub PR Review / Diff Styling */
+    .diff-del {
+      background-color: #ffe4e6;
+      color: #be123c;
+      text-decoration: line-through;
+      text-decoration-color: #f43f5e;
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-family: var(--font-mono);
+    }
+    .diff-add {
+      background-color: #ecfdf5;
+      color: #047857;
+      padding: 1px 4px;
+      border-radius: 3px;
+      border: 1px solid rgba(167, 243, 208, 0.6);
+      font-family: var(--font-mono);
+    }
+    /* Non-destructive live preview inline flag highlights */
+    .flag-claim {
+      background-color: rgba(254, 226, 226, 0.7);
+      border-bottom: 2px solid #f43f5e;
+      padding: 0 2px;
+      border-radius: 2px;
+      color: #881337;
+      font-weight: 500;
+    }
+    .flag-tone {
+      background-color: rgba(254, 243, 199, 0.75);
+      border-bottom: 2px solid #f59e0b;
+      padding: 0 2px;
+      border-radius: 2px;
+      color: #78350f;
+      font-weight: 500;
+    }
+    .flag-terminology {
+      background-color: rgba(224, 242, 254, 0.75);
+      border-bottom: 2px solid #0284c7;
+      padding: 0 2px;
+      border-radius: 2px;
+      color: #0c4a6e;
+      font-weight: 500;
+    }
   </style>
 
   <!-- React & ReactDOM CDN -->
