@@ -117,6 +117,16 @@ const ArrowRightIcon = ({ className = "w-3.5 h-3.5" }) => (
 // --- Refined Severity Badge Component ---
 function SeverityBadge({ severity, type }) {
   const t = (type || '').toLowerCase();
+  if (t.includes('accessibility')) {
+    return (
+      <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${severity === 'High'
+        ? 'bg-rose-50 text-rose-700 border border-rose-200/70'
+        : 'bg-amber-50 text-amber-700 border border-amber-200/70'
+        } font-mono`}>
+        {severity === 'High' ? 'High' : 'Medium'} • Accessibility
+      </span>
+    );
+  }
   if (t.includes('claim') || severity === 'High') {
     return (
       <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200/70 font-mono">
@@ -417,6 +427,40 @@ function ReviewWorkspaceView({
                     )}
                   </div>
                 </div>
+                {(activeItem.contentType === 'Social Post' || activeItem.contentType === 'Web Page') && (
+                  <div className="flex flex-wrap items-center gap-2 pl-2 sm:border-l sm:border-slate-200">
+                    <label className="flex items-center space-x-1.5 text-slate-400 font-medium text-[11px]">
+                      <span>Image description (alt text):</span>
+                      <input
+                        type="text"
+                        value={activeItem.altText || ''}
+                        onChange={(e) => onUpdateDraft({ altText: e.target.value })}
+                        placeholder="Optional"
+                        className="w-40 bg-white border border-slate-200 rounded px-2 py-1 text-[11px] text-slate-700 focus:outline-none focus:ring-1 focus:ring-slate-400"
+                      />
+                    </label>
+                    <label className="flex items-center space-x-1 text-slate-400 font-medium text-[11px]">
+                      <span>Text:</span>
+                      <input
+                        type="color"
+                        value={activeItem.textColor || '#0F172A'}
+                        onChange={(e) => onUpdateDraft({ textColor: e.target.value.toUpperCase() })}
+                        className="w-5 h-5 rounded cursor-pointer border-0 p-0 bg-transparent"
+                        title="Text color"
+                      />
+                    </label>
+                    <label className="flex items-center space-x-1 text-slate-400 font-medium text-[11px]">
+                      <span>Background:</span>
+                      <input
+                        type="color"
+                        value={activeItem.backgroundColor || '#FFFFFF'}
+                        onChange={(e) => onUpdateDraft({ backgroundColor: e.target.value.toUpperCase() })}
+                        className="w-5 h-5 rounded cursor-pointer border-0 p-0 bg-transparent"
+                        title="Background color"
+                      />
+                    </label>
+                  </div>
+                )}
               </div>
 
               {/* Sample Draft Quick Actions */}
@@ -600,7 +644,7 @@ function ReviewWorkspaceView({
               </div>
               <p className="font-medium text-slate-700">No Review Active</p>
               <p className="text-[11px] text-slate-400 max-w-xs mx-auto">
-                Paste draft copy or click "Load Sample Copy", then click "Run Brand Review" to audit against claims, tone, and terminology.
+                Paste draft copy or click "Load Sample Copy", then click "Run Brand Review" to audit claims, tone, terminology, visuals, and accessibility.
               </p>
             </div>
           )}
@@ -1353,6 +1397,7 @@ function InsightsView({ sessionIssues = [], onNavigateToWorkspace }) {
     if (t.includes('tone')) return 'tone';
     if (t.includes('term')) return 'terminology';
     if (t.includes('visual') || t.includes('color')) return 'visual';
+    if (t.includes('accessibility')) return 'accessibility';
     return 'other';
   };
 
@@ -1361,6 +1406,7 @@ function InsightsView({ sessionIssues = [], onNavigateToWorkspace }) {
   const toneCount = sessionIssues.filter(i => getCat(i) === 'tone').length;
   const termCount = sessionIssues.filter(i => getCat(i) === 'terminology').length;
   const visualCount = sessionIssues.filter(i => getCat(i) === 'visual').length;
+  const accessibilityCount = sessionIssues.filter(i => getCat(i) === 'accessibility').length;
   const resolvedCount = sessionIssues.filter(i => i.status === 'resolved').length;
 
   const filteredIssues = filter === 'all'
@@ -1387,8 +1433,8 @@ function InsightsView({ sessionIssues = [], onNavigateToWorkspace }) {
         </button>
       </div>
 
-      {/* 5 Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
+      {/* 6 Summary Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
         <div className="bg-white p-3.5 rounded-lg border border-slate-200/80 shadow-xs">
           <span className="text-[11px] text-slate-500 font-medium">Total Violations</span>
           <div className="text-2xl font-bold text-slate-900 mt-1 font-mono">{total}</div>
@@ -1403,6 +1449,17 @@ function InsightsView({ sessionIssues = [], onNavigateToWorkspace }) {
           <div className="text-2xl font-bold text-slate-900 mt-1 font-mono">{claimsCount}</div>
           <span className="text-[10px] text-slate-400 font-mono mt-0.5 block">
             {total > 0 ? Math.round((claimsCount / total) * 100) : 0}% of volume
+          </span>
+        </div>
+
+        <div className="bg-white p-3.5 rounded-lg border border-slate-200/80 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] text-emerald-700 font-medium">Accessibility</span>
+            <span className="text-[9px] font-mono px-1 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">WCAG</span>
+          </div>
+          <div className="text-2xl font-bold text-slate-900 mt-1 font-mono">{accessibilityCount}</div>
+          <span className="text-[10px] text-slate-400 font-mono mt-0.5 block">
+            {total > 0 ? Math.round((accessibilityCount / total) * 100) : 0}% of volume
           </span>
         </div>
 
@@ -1446,7 +1503,7 @@ function InsightsView({ sessionIssues = [], onNavigateToWorkspace }) {
           <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium">
             <span>Category Ratio Breakdown</span>
             <span className="font-mono text-slate-600">
-              {claimsCount} claim • {toneCount} tone • {termCount} terminology • {visualCount} visual
+              {claimsCount} claim • {toneCount} tone • {termCount} terminology • {visualCount} visual • {accessibilityCount} accessibility
             </span>
           </div>
 
@@ -1479,6 +1536,13 @@ function InsightsView({ sessionIssues = [], onNavigateToWorkspace }) {
                 title={`Visual Consistency: ${visualCount}`}
               />
             )}
+            {accessibilityCount > 0 && (
+              <div
+                style={{ width: `${(accessibilityCount / total) * 100}%` }}
+                className="bg-emerald-500 h-full transition-all"
+                title={`Accessibility: ${accessibilityCount}`}
+              />
+            )}
           </div>
         </div>
       )}
@@ -1489,7 +1553,7 @@ function InsightsView({ sessionIssues = [], onNavigateToWorkspace }) {
           <span className="font-semibold text-slate-900">Session Audit Activity Stream</span>
 
           <div className="inline-flex rounded-md bg-slate-100 p-0.5 border border-slate-200/60">
-            {['all', 'claim', 'tone', 'terminology', 'visual'].map((f) => (
+            {['all', 'claim', 'tone', 'terminology', 'visual', 'accessibility'].map((f) => (
               <button
                 key={f}
                 type="button"
@@ -1559,6 +1623,9 @@ function BrandSentryApp() {
       id: 'ci-init-1',
       text: '',
       brandColor: '',
+      altText: '',
+      textColor: '',
+      backgroundColor: '',
       contentType: 'Email',
       submittedAt: null,
       approvedAt: null,
@@ -1570,6 +1637,9 @@ function BrandSentryApp() {
       id: 'ci-preload-pending',
       text: "Welcome to our Onboarding Portal! Our enterprise cloud engine is up to 35% faster in batch-processing tests based on our internal benchmark. Explore all dedicated tools built for our Members.",
       brandColor: '#1F2A44',
+      altText: '',
+      textColor: '',
+      backgroundColor: '',
       contentType: 'Email',
       submittedAt: 'Today, 10:30 AM',
       approvedAt: null,
@@ -1585,6 +1655,9 @@ function BrandSentryApp() {
       id: 'ci-preload-approved',
       text: "Announcing the Q3 Release for all Members: experience secure, automated compliance checks directly within the Onboarding Portal.",
       brandColor: '#FFFFFF',
+      altText: '',
+      textColor: '',
+      backgroundColor: '',
       contentType: 'Web Page',
       submittedAt: 'Yesterday, 03:45 PM',
       approvedAt: 'Yesterday, 04:30 PM',
@@ -1612,7 +1685,13 @@ function BrandSentryApp() {
       claims,
       voiceRules,
       currentItem.brandColor,
-      palette
+      palette,
+      {
+        contentType: currentItem.contentType,
+        altText: currentItem.altText,
+        textColor: currentItem.textColor,
+        backgroundColor: currentItem.backgroundColor
+      }
     );
     updateActiveItem({
       issues: detected,
@@ -1646,6 +1725,28 @@ function BrandSentryApp() {
       setSessionIssues(prev => prev.map(iss =>
         iss.id === issue.id ? { ...iss, status: 'resolved' } : iss
       ));
+      return;
+    }
+
+    if (issue.type === 'Accessibility: Missing alt text') {
+      const updatedIssues = currentItem.issues.map(iss =>
+        iss.id === issue.id
+          ? { ...iss, status: 'resolved', resolution: 'Added suggested image description' }
+          : iss
+      );
+      updateActiveItem({ altText: issue.suggestedRewrite, issues: updatedIssues });
+      setSessionIssues(prev => prev.map(iss => iss.id === issue.id ? { ...iss, status: 'resolved' } : iss));
+      return;
+    }
+
+    if (issue.type === 'Accessibility: Low contrast') {
+      const updatedIssues = currentItem.issues.map(iss =>
+        iss.id === issue.id
+          ? { ...iss, status: 'resolved', resolution: `Updated text color to ${issue.suggestedRewrite}` }
+          : iss
+      );
+      updateActiveItem({ textColor: issue.suggestedRewrite, issues: updatedIssues });
+      setSessionIssues(prev => prev.map(iss => iss.id === issue.id ? { ...iss, status: 'resolved' } : iss));
       return;
     }
 
@@ -1708,6 +1809,24 @@ function BrandSentryApp() {
       setSessionIssues(prev => prev.map(iss =>
         iss.id === issue.id ? { ...iss, status: 'resolved' } : iss
       ));
+      return;
+    }
+
+    if (issue.type === 'Accessibility: Missing alt text') {
+      const updatedIssues = currentItem.issues.map(iss =>
+        iss.id === issue.id ? { ...iss, status: 'resolved', resolution: `Custom: "${customReplacement}"` } : iss
+      );
+      updateActiveItem({ altText: customReplacement, issues: updatedIssues });
+      setSessionIssues(prev => prev.map(iss => iss.id === issue.id ? { ...iss, status: 'resolved' } : iss));
+      return;
+    }
+
+    if (issue.type === 'Accessibility: Low contrast') {
+      const updatedIssues = currentItem.issues.map(iss =>
+        iss.id === issue.id ? { ...iss, status: 'resolved', resolution: `Custom color: "${customReplacement}"` } : iss
+      );
+      updateActiveItem({ textColor: customReplacement.toUpperCase(), issues: updatedIssues });
+      setSessionIssues(prev => prev.map(iss => iss.id === issue.id ? { ...iss, status: 'resolved' } : iss));
       return;
     }
 

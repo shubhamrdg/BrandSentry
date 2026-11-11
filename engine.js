@@ -55,7 +55,37 @@ function checkVisualConsistency(hexValue, palette = []) {
   };
 }
 
-function reviewContent(text, glossary = [], claims = [], voiceRules = [], brandColor = null, palette = []) {
+function relativeLuminance(rgb) {
+  const channel = value => {
+    const normalized = value / 255;
+    return normalized <= 0.03928
+      ? normalized / 12.92
+      : Math.pow((normalized + 0.055) / 1.055, 2.4);
+  };
+  return (0.2126 * channel(rgb.r)) + (0.7152 * channel(rgb.g)) + (0.0722 * channel(rgb.b));
+}
+
+function contrastRatio(textColor, backgroundColor) {
+  const textRgb = hexToRgb(textColor);
+  const backgroundRgb = hexToRgb(backgroundColor);
+  if (!textRgb || !backgroundRgb) return null;
+  const textLuminance = relativeLuminance(textRgb);
+  const backgroundLuminance = relativeLuminance(backgroundRgb);
+  const lighter = Math.max(textLuminance, backgroundLuminance);
+  const darker = Math.min(textLuminance, backgroundLuminance);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function findNearestPassingPaletteColor(textColor, backgroundColor, palette = []) {
+  const inputRgb = hexToRgb(textColor);
+  if (!inputRgb) return null;
+  return (palette || [])
+    .map(color => ({ ...color, ratio: contrastRatio(color.hex, backgroundColor) }))
+    .filter(color => color.ratio !== null && color.ratio >= 4.5)
+    .sort((a, b) => colorDistance(inputRgb, hexToRgb(a.hex)) - colorDistance(inputRgb, hexToRgb(b.hex)))[0] || null;
+}
+
+function reviewContent(text, glossary = [], claims = [], voiceRules = [], brandColor = null, palette = [], accessibility = {}) {
   const issues = [];
   if (!text || typeof text !== 'string') return issues;
 
@@ -135,6 +165,50 @@ function reviewContent(text, glossary = [], claims = [], voiceRules = [], brandC
     const visualIssue = checkVisualConsistency(brandColor, palette);
     if (visualIssue) issues.push(visualIssue);
   }
+
+  const accessibilityContentType = accessibility.contentType;
+  const requiresAltText = accessibilityContentType === 'Social Post' || accessibilityContentType === 'Web Page';
+  if (requiresAltText && !String(accessibility.altText || '').trim()) {
+    issues.push({
+      id: `issue-accessibility-alt-${Date.now()}`,
+      type: 'Accessibility: Missing alt text',
+      severity: 'Medium',
+      snippet: '[missing alt text]',
+      reason: 'WCAG requires descriptive alt text for non-decorative images.',
+      sourceRef: 'WCAG requires descriptive alt text for non-decorative images',
+      suggestedRewrite: 'A descriptive image of the content or subject.'
+    });
+  }
+
+  const textColor = accessibility.textColor;
+  const backgroundColor = accessibility.backgroundColor;
+  if (textColor && backgroundColor) {
+    const ratio = contrastRatio(textColor, backgroundColor);
+    if (ratio !== null && ratio < 4.5) {
+      const nearestPassingColor = findNearestPassingPaletteColor(textColor, backgroundColor, palette);
+      if (nearestPassingColor) {
+        issues.push({
+          id: `issue-accessibility-contrast-${Date.now()}`,
+          type: 'Accessibility: Low contrast',
+          severity: 'High',
+          snippet: textColor.toUpperCase(),
+          reason: `Text and background contrast is ${ratio.toFixed(2)}:1, below the WCAG minimum of 4.5:1.`,
+          sourceRef: 'WCAG 1.4.3 Contrast (Minimum)',
+          suggestedRewrite: nearestPassingColor.hex
+        });
+      } else {
+        issues.push({
+          id: `issue-accessibility-contrast-${Date.now()}`,
+          type: 'Accessibility: Low contrast',
+          severity: 'High',
+          snippet: textColor.toUpperCase(),
+          reason: `Text and background contrast is ${ratio.toFixed(2)}:1, below the WCAG minimum of 4.5:1.`,
+          sourceRef: 'WCAG 1.4.3 Contrast (Minimum)',
+          suggestedRewrite: palette[0] ? palette[0].hex : '#FFFFFF'
+        });
+      }
+    }
+  }
   return issues;
 }
 
@@ -143,5 +217,6 @@ if (typeof window !== 'undefined') {
   window.hexToRgb = hexToRgb;
   window.colorDistance = colorDistance;
   window.checkVisualConsistency = checkVisualConsistency;
+  window.contrastRatio = contrastRatio;
   window.reviewContent = reviewContent;
 }
