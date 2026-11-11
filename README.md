@@ -1,4 +1,4 @@
-﻿# BrandSentry — Enterprise Brand Governance Platform
+# BrandSentry — Enterprise Brand Governance Platform
 
 > **Team DviCoders — Hackathon Project**
 > An autonomous, in-browser brand governance suite ensuring marketing copy, emails, and product updates strictly adhere to approved claims, executive voice rules, and governed terminology before publication.
