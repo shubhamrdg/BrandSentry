@@ -95,7 +95,15 @@ BrandSentry is engineered as a **100% client-side, zero-backend Single-Page Appl
 The engine resides in [`engine.js`](file:///e:/Antigravity/BrandSentry/engine.js) and attaches directly to `window.reviewContent`. It is pure, deterministic, and free of side effects.
 
 ```javascript
-window.reviewContent = function(text, glossary = [], claims = [], voiceRules = []) { ... }
+window.reviewContent = function(
+  text,
+  glossary = [],
+  claims = [],
+  voiceRules = [],
+  brandColor = null,
+  palette = [],
+  accessibility = { contentType, altText, textColor, backgroundColor }
+) { ... }
 ```
 
 ### Escaping Utility
