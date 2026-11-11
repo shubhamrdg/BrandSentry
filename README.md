@@ -169,19 +169,6 @@ Then click **"Load Sample Copy"** → **"Run Brand Review"** to start governing 
 | State | React `useState` — fully in-memory, no persistence layer |
 | Hosting | Vercel (static deploy) |
 
----
-
-## Verification Checklist
-
-- [x] App loads directly into Review Workspace — no login or landing page
-- [x] "Load Sample Copy" → "Run Brand Review" → all 3 issue types appear with correct severities
-- [x] Accept / Edit / Dismiss visibly change issue and draft state
-- [x] "Send for Approval" respects the strict quality gate (disabled while issues remain open)
-- [x] Approving and Sending Back visibly update the Approval Board columns
-- [x] Adding a glossary term in Knowledge Base is picked up immediately by the engine
-- [x] Insights reflects real session data, not static numbers
-- [x] Fully usable on narrow / phone-width viewports with no horizontal scroll
-- [x] Zero dead buttons, zero placeholder text, zero auth code paths
 
 ---
 
