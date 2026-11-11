@@ -451,24 +451,6 @@ BrandSentry follows a human-crafted B2B SaaS aesthetic:
 
 ---
 
-## Verification & Hackathon Checklist
-
-BrandSentry satisfies all criteria from the technical specification:
-
-- [x] **Zero Landing Walls**: Boots immediately to Review Workspace with no login or onboarding dialogs.
-- [x] **Detection Accuracy**: Flags claims (High), tone (Medium), and terminology (Low) with exact citations.
-- [x] **Interactive Action Suite**: Fully wired Accept, Edit, and Dismiss handlers with validation.
-- [x] **Quality Gate Enforcement**: "Send for Approval" strictly locked until 100% of open issues are resolved.
-- [x] **Approval Board Columns**: 3 columns (Pending Review, Approved, Sent Back) with preloaded demonstration items.
-- [x] **Visible Role Toggle**: Creator / Reviewer switch cleanly controlling review authority.
-- [x] **Resubmit Loop**: Sent Back drafts reopen in workspace and loop back through `in_review`.
-- [x] **Live Knowledge Base**: Additions dynamically modify detection rules without page reload.
-- [x] **Real Session Insights**: Dynamic calculation of session issue counts, sparkline ratios, and audit logs.
-- [x] **Responsive Mobile Layout**: Tested for narrow phone viewports with zero horizontal overflow.
-- [x] **Zero Dead Elements**: Every button, input, and modal has active functional handlers.
-
----
-
 ## Local Development & Zero-CORS Setup
 
 BrandSentry has **zero build dependencies**. You do not need Node.js, Webpack, or Vite.
