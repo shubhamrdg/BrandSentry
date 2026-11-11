@@ -102,3 +102,12 @@ code, pre, .font-mono {
   color: #0c4a6e;
   font-weight: 500;
 }
+
+.flag-visual {
+  background-color: rgba(243, 232, 255, 0.75);
+  border-bottom: 2px solid #a855f7;
+  padding: 0 2px;
+  border-radius: 2px;
+  color: #581c87;
+  font-weight: 500;
+}
