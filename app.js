@@ -160,18 +160,22 @@ function renderLiveHighlights(text, issues) {
   const matches = [];
   openIssues.forEach(issue => {
     if (!issue.snippet) return;
-    try {
-      const reg = new RegExp(window.escapeRegExp(issue.snippet), 'gi');
-      let m;
-      while ((m = reg.exec(text)) !== null) {
-        matches.push({
-          start: m.index,
-          end: m.index + m[0].length,
-          snippet: m[0],
-          issue
-        });
-      }
-    } catch (e) { }
+    // Split multi-snippet issues (e.g. tone mismatches "Yo!, !!") so each piece is highlighted
+    const parts = issue.snippet.split(',').map(s => s.trim()).filter(Boolean);
+    parts.forEach(part => {
+      try {
+        const reg = new RegExp(window.escapeRegExp(part), 'gi');
+        let m;
+        while ((m = reg.exec(text)) !== null) {
+          matches.push({
+            start: m.index,
+            end: m.index + m[0].length,
+            snippet: m[0],
+            issue
+          });
+        }
+      } catch (e) { }
+    });
   });
 
   if (matches.length === 0) {
@@ -1408,8 +1412,12 @@ function BrandSentryApp() {
       const reg = new RegExp(`\\b${window.escapeRegExp(issue.snippet)}\\b`, 'gi');
       updatedText = updatedText.replace(reg, rep);
     } else if (issue.type === 'Unsupported claim') {
-      const reg = new RegExp(`\\b${window.escapeRegExp(issue.snippet)}\\b`, 'i');
-      updatedText = updatedText.replace(reg, issue.suggestedRewrite);
+      if (issue.snippet.toLowerCase() === '10x' && /\b10x\s+faster\b/i.test(updatedText)) {
+        updatedText = updatedText.replace(/\b10x\s+faster\b/i, issue.suggestedRewrite);
+      } else {
+        const reg = new RegExp(`\\b${window.escapeRegExp(issue.snippet)}\\b`, 'i');
+        updatedText = updatedText.replace(reg, issue.suggestedRewrite);
+      }
     } else if (issue.type === 'Tone mismatch') {
       updatedText = updatedText.replace(/!{2,}/g, '.');
       const slangWords = ["yo", "dope", "gonna", "lol", "omg", "lit"];
