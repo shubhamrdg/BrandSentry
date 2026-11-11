@@ -84,7 +84,7 @@ BrandSentry is engineered as a **100% client-side, zero-backend Single-Page Appl
 ```
 
 ### Architectural Highlights
-- **Zero-CORS Dual Packaging**: The React application is written modularly in [`app.js`](file:///e:/Antigravity/BrandSantry/app.js) and simultaneously inlined inside [`index.html`](file:///e:/Antigravity/BrandSantry/index.html) within `<script type="text/babel">`. This allows the application to execute instantly when double-clicked via `file://` (which blocks cross-origin script fetching in Chrome) while remaining fully deployable to static hosts like Vercel.
+- **Static Four-File Packaging**: The detection engine is contained in [`engine.js`](file:///e:/Antigravity/BrandSentry/engine.js), the React application is in [`app.js`](file:///e:/Antigravity/BrandSentry/app.js), presentation rules are in [`styles.css`](file:///e:/Antigravity/BrandSentry/styles.css), and [`index.html`](file:///e:/Antigravity/BrandSentry/index.html) contains only the document shell and external links. This keeps the app deployable to static hosts like Vercel while remaining usable via `file://`.
 - **In-Memory Reactive State**: App-level state is maintained in React hooks (`useState`), reacting immediately across views without local storage delays or database latencies.
 - **Pure Functional Detection**: The scanning logic is completely decoupled from UI components, accepting text and rule arrays and returning structured violation descriptors.
 
@@ -92,7 +92,7 @@ BrandSentry is engineered as a **100% client-side, zero-backend Single-Page Appl
 
 ## The Brand Detection Engine (`window.reviewContent`)
 
-The engine resides in a dedicated `<script>` tag and attaches directly to `window.reviewContent`. It is pure, deterministic, and free of side effects.
+The engine resides in [`engine.js`](file:///e:/Antigravity/BrandSentry/engine.js) and attaches directly to `window.reviewContent`. It is pure, deterministic, and free of side effects.
 
 ```javascript
 window.reviewContent = function(text, glossary = [], claims = [], voiceRules = []) { ... }
