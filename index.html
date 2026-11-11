@@ -1748,6 +1748,7 @@
     // --- Main Application Shell ---
     function BrandSentryApp() {
       const [activeTab, setActiveTab] = useState('review');
+      const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
       // Seed Knowledge Base data
       const [glossary, setGlossary] = useState(INITIAL_GLOSSARY);
@@ -1971,20 +1972,46 @@
 
       return (
         <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
-          {/* Left Sidebar */}
-          <aside className="w-64 bg-slate-900 text-slate-200 flex flex-col flex-shrink-0 shadow-xl border-r border-slate-800">
-            <div className="p-5 border-b border-slate-800 flex items-center space-x-3">
-              <div className="bg-indigo-600 p-2 rounded-lg text-white shadow-md">
-                <ShieldCheckIcon className="w-6 h-6" />
+          {/* Mobile Drawer Backdrop */}
+          {mobileMenuOpen && (
+            <div
+              onClick={() => setMobileMenuOpen(false)}
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 md:hidden transition-opacity"
+            />
+          )}
+
+          {/* Left Sidebar (Desktop static, Mobile off-canvas drawer) */}
+          <aside
+            className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-200 flex flex-col flex-shrink-0 shadow-2xl md:shadow-xl border-r border-slate-800 transition-transform duration-300 ease-in-out ${
+              mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+            }`}
+          >
+            <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="bg-indigo-600 p-2 rounded-lg text-white shadow-md">
+                  <ShieldCheckIcon className="w-6 h-6" />
+                </div>
+                <div>
+                  <h1 className="text-lg font-bold tracking-tight text-white leading-tight">
+                    BrandSentry
+                  </h1>
+                  <span className="inline-block text-[11px] font-semibold text-indigo-400 uppercase tracking-wider">
+                    by DviCoders
+                  </span>
+                </div>
               </div>
-              <div>
-                <h1 className="text-lg font-bold tracking-tight text-white leading-tight">
-                  BrandSentry
-                </h1>
-                <span className="inline-block text-[11px] font-semibold text-indigo-400 uppercase tracking-wider">
-                  by DviCoders
-                </span>
-              </div>
+
+              {/* Close button for mobile drawer */}
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                className="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+                aria-label="Close menu"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
 
             <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
@@ -1997,7 +2024,10 @@
                 return (
                   <button
                     key={item.id}
-                    onClick={() => setActiveTab(item.id)}
+                    onClick={() => {
+                      setActiveTab(item.id);
+                      setMobileMenuOpen(false);
+                    }}
                     className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                       isActive
                         ? 'bg-indigo-600 text-white shadow-sm'
@@ -2034,15 +2064,29 @@
           </aside>
 
           {/* Main Content Area */}
-          <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <div className="flex-1 flex flex-col min-w-0 overflow-hidden w-full max-w-full">
             {/* Top Navbar */}
-            <header className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between flex-shrink-0 shadow-sm">
-              <div className="flex items-center space-x-2">
-                <span className="text-slate-400 text-sm">BrandSentry</span>
-                <span className="text-slate-300">/</span>
-                <span className="text-slate-800 font-semibold text-sm">
-                  {navItems.find((n) => n.id === activeTab)?.label}
-                </span>
+            <header className="h-16 bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between flex-shrink-0 shadow-sm">
+              <div className="flex items-center space-x-3">
+                {/* Hamburger Button for Mobile */}
+                <button
+                  type="button"
+                  onClick={() => setMobileMenuOpen(true)}
+                  className="md:hidden p-2 -ml-1 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none"
+                  aria-label="Open menu"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
+
+                <div className="flex items-center space-x-2">
+                  <span className="text-slate-400 text-xs sm:text-sm">BrandSentry</span>
+                  <span className="text-slate-300">/</span>
+                  <span className="text-slate-800 font-semibold text-xs sm:text-sm">
+                    {navItems.find((n) => n.id === activeTab)?.label}
+                  </span>
+                </div>
               </div>
 
               <div className="hidden sm:flex items-center space-x-1 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-medium">
@@ -2061,15 +2105,15 @@
                 ))}
               </div>
 
-              <div className="flex items-center space-x-3">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                  DviCoders Hackathon
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                  DviCoders
                 </span>
               </div>
             </header>
 
             {/* Dynamic View Body */}
-            <main className="flex-1 overflow-y-auto p-6">
+            <main className="flex-1 overflow-y-auto p-3 sm:p-6 max-w-full overflow-x-hidden">
               {activeTab === 'review' && (
                 <ReviewWorkspaceView
                   activeItem={currentItem}
@@ -2106,6 +2150,42 @@
                 />
               )}
             </main>
+
+            {/* Mobile Thumb-Friendly Bottom Navigation Bar */}
+            <nav className="md:hidden bg-white border-t border-slate-200 grid grid-cols-4 px-1 py-1 z-30 flex-shrink-0 shadow-lg">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                const shortLabels = {
+                  review: 'Review',
+                  approval: 'Approval',
+                  knowledge: 'Knowledge',
+                  insights: 'Insights'
+                };
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setActiveTab(item.id);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`flex flex-col items-center justify-center py-1.5 rounded-lg text-[10px] font-medium relative transition-colors ${
+                      isActive ? 'text-indigo-600 font-bold bg-indigo-50/60' : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    <div className="relative">
+                      <Icon className="w-5 h-5" />
+                      {item.badge !== undefined && (
+                        <span className="absolute -top-1 -right-2 bg-indigo-600 text-white text-[9px] min-w-[14px] h-[14px] px-0.5 rounded-full flex items-center justify-center font-bold">
+                          {item.badge}
+                        </span>
+                      )}
+                    </div>
+                    <span className="mt-0.5 tracking-tight">{shortLabels[item.id] || item.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
           </div>
         </div>
       );
