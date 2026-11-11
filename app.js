@@ -26,6 +26,12 @@ const INITIAL_VOICE_RULES = [
   { id: 'v1', text: "Confident and friendly, never slang-heavy" }
 ];
 
+// Phase 9: Approved Brand Palette
+const INITIAL_PALETTE = [
+  { id: 'p1', hex: "#1F2A44", name: "Brand Navy" },
+  { id: 'p2', hex: "#FFFFFF", name: "White" }
+];
+
 // Seed Session Issues (Live Tracking Across Session)
 const INITIAL_SESSION_ISSUES = [
   { id: 'iss-seed-1', type: 'Terminology inconsistency', severity: 'Low', snippet: 'Sign-Up Portal', status: 'resolved', detectedAt: '10:30 AM', contentType: 'Email' },
@@ -110,22 +116,30 @@ const ArrowRightIcon = ({ className = "w-3.5 h-3.5" }) => (
 
 // --- Refined Severity Badge Component ---
 function SeverityBadge({ severity, type }) {
-  if (severity === 'High') {
+  const t = (type || '').toLowerCase();
+  if (t.includes('claim') || severity === 'High') {
     return (
-      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200/70">
+      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200/70 font-mono">
         High • Claim
       </span>
     );
   }
-  if (severity === 'Medium') {
+  if (t.includes('visual')) {
     return (
-      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200/70">
+      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200/70 font-mono">
+        Med • Visual
+      </span>
+    );
+  }
+  if (t.includes('tone') || severity === 'Medium') {
+    return (
+      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200/70 font-mono">
         Medium • Tone
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-sky-50 text-sky-700 border border-sky-200/70">
+    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-sky-50 text-sky-700 border border-sky-200/70 font-mono">
       Low • Terminology
     </span>
   );
@@ -225,19 +239,38 @@ function renderLiveHighlights(text, issues) {
 
 // --- GitHub PR / Linear Style Diff Component ---
 function IssueDiffView({ snippet, suggestedRewrite }) {
+  const isColorSnippet = typeof snippet === 'string' && /^#[0-9A-F]{3,6}$/i.test(snippet.trim());
+  const isColorRewrite = typeof suggestedRewrite === 'string' && /^#[0-9A-F]{3,6}$/i.test(suggestedRewrite.trim());
+
   return (
     <div className="bg-slate-50 border border-slate-200/80 rounded-md p-2.5 my-2.5 font-mono text-xs space-y-1.5">
       <div className="flex items-center justify-between text-[10px] text-slate-400 font-sans uppercase tracking-wider font-semibold">
         <span>Suggested Fix (Diff)</span>
         <span className="text-slate-400">1 change</span>
       </div>
-      <div className="flex items-start space-x-2 leading-relaxed">
+      <div className="flex items-center space-x-2 leading-relaxed">
         <span className="text-rose-500 font-bold select-none text-[11px]">-</span>
-        <span className="diff-del">{snippet}</span>
+        <span className="diff-del inline-flex items-center space-x-1">
+          <span>{snippet}</span>
+          {isColorSnippet && (
+            <span
+              className="inline-block w-2.5 h-2.5 rounded-xs border border-slate-300 ml-1 shadow-2xs"
+              style={{ backgroundColor: snippet }}
+            />
+          )}
+        </span>
       </div>
-      <div className="flex items-start space-x-2 leading-relaxed">
+      <div className="flex items-center space-x-2 leading-relaxed">
         <span className="text-emerald-600 font-bold select-none text-[11px]">+</span>
-        <span className="diff-add">{suggestedRewrite}</span>
+        <span className="diff-add inline-flex items-center space-x-1">
+          <span>{suggestedRewrite}</span>
+          {isColorRewrite && (
+            <span
+              className="inline-block w-2.5 h-2.5 rounded-xs border border-slate-300 ml-1 shadow-2xs"
+              style={{ backgroundColor: suggestedRewrite }}
+            />
+          )}
+        </span>
       </div>
     </div>
   );
@@ -337,35 +370,70 @@ function ReviewWorkspaceView({
           <div className="bg-white border border-slate-200/80 rounded-lg shadow-xs overflow-hidden">
             {/* Editor Toolbar */}
             <div className="px-4 py-2.5 border-b border-slate-200/80 bg-slate-50/50 flex flex-wrap items-center justify-between gap-2 text-xs">
-              <div className="flex items-center space-x-2">
-                <span className="text-slate-400 font-medium">Format:</span>
-                <select
-                  value={activeItem.contentType}
-                  onChange={(e) => onUpdateDraft({ contentType: e.target.value })}
-                  className="bg-white border border-slate-200 text-slate-700 rounded px-2 py-1 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-slate-400"
-                >
-                  <option value="Email">Email Campaign</option>
-                  <option value="Web Page">Web Page / Landing</option>
-                  <option value="Social Post">Social Post</option>
-                </select>
-                <StatusBadge status={activeItem.status} />
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center space-x-1.5">
+                  <span className="text-slate-400 font-medium">Format:</span>
+                  <select
+                    value={activeItem.contentType}
+                    onChange={(e) => onUpdateDraft({ contentType: e.target.value })}
+                    className="bg-white border border-slate-200 text-slate-700 rounded px-2 py-1 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-slate-400"
+                  >
+                    <option value="Email">Email Campaign</option>
+                    <option value="Web Page">Web Page / Landing</option>
+                    <option value="Social Post">Social Post</option>
+                  </select>
+                  <StatusBadge status={activeItem.status} />
+                </div>
+
+                {/* Optional Brand Color Used (Phase 9) */}
+                <div className="flex items-center space-x-1.5 pl-2 sm:border-l sm:border-slate-200">
+                  <span className="text-slate-400 font-medium text-[11px]" title="Optional brand color used in creative assets">
+                    Color:
+                  </span>
+                  <div className="flex items-center space-x-1 bg-white border border-slate-200 rounded px-1.5 py-0.5">
+                    <input
+                      type="color"
+                      value={activeItem.brandColor || "#1F2A44"}
+                      onChange={(e) => onUpdateDraft({ brandColor: e.target.value.toUpperCase() })}
+                      className="w-4 h-4 rounded cursor-pointer border-0 p-0 bg-transparent shrink-0"
+                      title="Pick brand color used (optional)"
+                    />
+                    <input
+                      type="text"
+                      placeholder="#HEX (opt)"
+                      value={activeItem.brandColor || ''}
+                      onChange={(e) => onUpdateDraft({ brandColor: e.target.value.toUpperCase() })}
+                      className="w-18 font-mono text-[11px] text-slate-700 bg-transparent focus:outline-none"
+                    />
+                    {activeItem.brandColor && (
+                      <button
+                        type="button"
+                        onClick={() => onUpdateDraft({ brandColor: '' })}
+                        className="text-slate-400 hover:text-slate-600 p-0.5"
+                        title="Clear color"
+                      >
+                        <XIcon className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Sample Draft Quick Actions */}
               <div className="flex items-center space-x-1.5">
                 <button
                   type="button"
-                  onClick={() => onUpdateDraft({ text: TEST_EXAMPLE, status: 'draft', issues: [], reviewerComment: '' })}
+                  onClick={() => onUpdateDraft({ text: TEST_EXAMPLE, brandColor: '#1F2A44', status: 'draft', issues: [], reviewerComment: '' })}
                   className="px-2.5 py-1 text-xs font-medium rounded text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 transition-colors border border-slate-200 bg-white"
-                  title="Fills standard test example triggering all 3 issue categories"
+                  title="Fills standard test example with approved Brand Navy"
                 >
                   Load Sample Copy
                 </button>
                 <button
                   type="button"
-                  onClick={() => onUpdateDraft({ text: TWEAKED_EXAMPLE, status: 'draft', issues: [], reviewerComment: '' })}
+                  onClick={() => onUpdateDraft({ text: TWEAKED_EXAMPLE, brandColor: '#3B82F6', status: 'draft', issues: [], reviewerComment: '' })}
                   className="px-2.5 py-1 text-xs font-medium rounded text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 transition-colors border border-slate-200 bg-white"
-                  title="Loads copy containing extended terms (e.g. cheap, competitor)"
+                  title="Loads copy with unapproved color #3B82F6 & extended terms"
                 >
                   Load Extended
                 </button>
@@ -697,6 +765,7 @@ function ReviewWorkspaceView({
 function ApprovalBoardView({
   contentItems = [],
   userRole = 'Creator',
+  onRoleChange,
   onApprove,
   onSendBack,
   onEditInWorkspace
@@ -722,7 +791,7 @@ function ApprovalBoardView({
 
   return (
     <div className="max-w-7xl mx-auto space-y-4 animate-fadeIn">
-      {/* Top Banner explaining Reviewer Authority */}
+      {/* Top Banner with Embedded Role Switcher */}
       <div className="bg-white border border-slate-200/80 rounded-lg p-3.5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
         <div>
           <div className="flex items-center space-x-2">
@@ -734,12 +803,35 @@ function ApprovalBoardView({
           <p className="text-slate-500 text-[11px] mt-0.5">
             {userRole === 'Reviewer'
               ? 'Reviewer Authority Active: Approve publication or return drafts with mandatory revision feedback.'
-              : 'Creator Mode Active: Viewing pipeline status. Toggle to "Reviewer" in top navigation to test sign-off.'}
+              : 'Creator Mode Active: Viewing pipeline status. Toggle to "Reviewer" below or in header to test sign-off.'}
           </p>
         </div>
 
-        <div className="text-[11px] font-mono text-slate-400">
-          Viewing as: <strong className="text-slate-700">{userRole}</strong>
+        <div className="flex items-center space-x-2">
+          <span className="text-[11px] font-medium text-slate-500">Viewing as:</span>
+          <div className="inline-flex bg-slate-100 p-0.5 rounded-md border border-slate-200 text-xs">
+            <button
+              type="button"
+              onClick={() => onRoleChange && onRoleChange('Creator')}
+              className={`px-2 py-0.5 rounded text-[11px] font-medium transition-all ${userRole === 'Creator'
+                ? 'bg-white text-slate-900 shadow-xs font-semibold'
+                : 'text-slate-500 hover:text-slate-800'
+                }`}
+            >
+              Creator
+            </button>
+            <button
+              type="button"
+              onClick={() => onRoleChange && onRoleChange('Reviewer')}
+              className={`px-2 py-0.5 rounded text-[11px] font-medium transition-all flex items-center space-x-1 ${userRole === 'Reviewer'
+                ? 'bg-slate-900 text-white shadow-xs font-semibold'
+                : 'text-slate-500 hover:text-slate-800'
+                }`}
+            >
+              <span>Reviewer</span>
+              <span className={`w-1.5 h-1.5 rounded-full ${userRole === 'Reviewer' ? 'bg-emerald-400' : 'bg-transparent'}`}></span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -767,9 +859,17 @@ function ApprovalBoardView({
               return (
                 <div key={item.id} className="bg-white rounded-md border border-slate-200/80 p-3 shadow-xs space-y-2.5 text-xs">
                   <div className="flex items-center justify-between text-[11px]">
-                    <span className="font-medium bg-slate-100 text-slate-700 px-2 py-0.5 rounded">
-                      {item.contentType}
-                    </span>
+                    <div className="flex items-center space-x-1.5">
+                      <span className="font-medium bg-slate-100 text-slate-700 px-2 py-0.5 rounded">
+                        {item.contentType}
+                      </span>
+                      {item.brandColor && (
+                        <span className="inline-flex items-center space-x-1 text-[10px] font-mono bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border border-slate-200" title={`Brand color: ${item.brandColor}`}>
+                          <span className="w-2 h-2 rounded-full border border-slate-300" style={{ backgroundColor: item.brandColor }}></span>
+                          <span>{item.brandColor}</span>
+                        </span>
+                      )}
+                    </div>
                     <span className="font-mono text-slate-400 text-[10px]">
                       {item.submittedAt || 'Earlier'}
                     </span>
@@ -970,11 +1070,16 @@ function KnowledgeBaseView({
   glossary = [],
   claims = [],
   voiceRules = [],
+  palette = [],
   onAddGlossaryPair,
-  onDeleteGlossaryPair
+  onDeleteGlossaryPair,
+  onAddColor,
+  onDeleteColor
 }) {
   const [avoidTerm, setAvoidTerm] = useState('');
   const [approvedTerm, setApprovedTerm] = useState('');
+  const [newColorName, setNewColorName] = useState('');
+  const [newColorHex, setNewColorHex] = useState('#2563EB');
   const [bannerMsg, setBannerMsg] = useState(null);
 
   const handleSubmit = (e) => {
@@ -985,6 +1090,17 @@ function KnowledgeBaseView({
     setBannerMsg(`Added "${avoidTerm.trim()}" → "${approvedTerm.trim()}". Active immediately!`);
     setAvoidTerm('');
     setApprovedTerm('');
+    setTimeout(() => setBannerMsg(null), 4500);
+  };
+
+  const handleColorSubmit = (e) => {
+    e.preventDefault();
+    if (!newColorName.trim() || !newColorHex.trim()) return;
+
+    onAddColor(newColorName.trim(), newColorHex.trim());
+    setBannerMsg(`Added "${newColorName.trim()}" (${newColorHex.trim().toUpperCase()}) to approved palette!`);
+    setNewColorName('');
+    setNewColorHex('#2563EB');
     setTimeout(() => setBannerMsg(null), 4500);
   };
 
@@ -999,7 +1115,7 @@ function KnowledgeBaseView({
           </p>
         </div>
         <div className="text-[11px] font-mono text-slate-500">
-          {glossary.length} terminology pairs • {claims.length} claims • {voiceRules.length} voice charter
+          {glossary.length} terminology pairs • {palette.length} palette colors • {claims.length} claims • {voiceRules.length} voice charter
         </div>
       </div>
 
@@ -1010,8 +1126,8 @@ function KnowledgeBaseView({
         </div>
       )}
 
-      {/* 3 Columns for 3 Rule Categories */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+      {/* 4 Columns for 4 Rule Categories */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-start">
         {/* 1. Terminology Glossary */}
         <div className="bg-white border border-slate-200/80 rounded-lg p-4 shadow-xs space-y-3.5 text-xs">
           <div className="flex items-center justify-between pb-2 border-b border-slate-100">
@@ -1081,7 +1197,88 @@ function KnowledgeBaseView({
           </form>
         </div>
 
-        {/* 2. Approved Claims */}
+        {/* 2. Approved Brand Palette (Phase 9) */}
+        <div className="bg-white border border-slate-200/80 rounded-lg p-4 shadow-xs space-y-3.5 text-xs">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+            <span className="font-semibold text-slate-900">Approved Palette</span>
+            <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-purple-50 text-purple-700 border border-purple-200">
+              Medium Severity
+            </span>
+          </div>
+
+          <p className="text-slate-500 text-[11px]">
+            Official brand hex colors. Visual consistency checks flag unapproved colors and recommend the nearest match.
+          </p>
+
+          <div className="space-y-2">
+            {palette.map((color) => (
+              <div key={color.id} className="p-2.5 rounded border border-slate-200/70 bg-slate-50/50 flex items-center justify-between">
+                <div className="flex items-center space-x-2.5">
+                  <span
+                    className="w-5 h-5 rounded border border-slate-300 shadow-2xs shrink-0"
+                    style={{ backgroundColor: color.hex }}
+                  />
+                  <div>
+                    <span className="font-semibold text-slate-800 text-[11px] block">{color.name}</span>
+                    <span className="font-mono text-slate-500 text-[10px]">{color.hex}</span>
+                  </div>
+                </div>
+                {palette.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => onDeleteColor(color.id)}
+                    className="text-slate-400 hover:text-rose-600 p-1"
+                    title="Remove color"
+                  >
+                    <XIcon className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Add Color Form */}
+          <form onSubmit={handleColorSubmit} className="pt-2 border-t border-slate-100 space-y-2">
+            <span className="font-semibold text-slate-800 text-[11px] block">Add Approved Color:</span>
+            <div className="space-y-1.5">
+              <input
+                type="text"
+                placeholder="Color Name (e.g. Electric Blue)"
+                value={newColorName}
+                onChange={(e) => setNewColorName(e.target.value)}
+                className="w-full text-xs bg-slate-50 border border-slate-200 rounded p-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-400"
+              />
+              <div className="flex items-center space-x-1.5">
+                <input
+                  type="color"
+                  value={newColorHex || "#2563EB"}
+                  onChange={(e) => setNewColorHex(e.target.value.toUpperCase())}
+                  className="w-7 h-7 rounded cursor-pointer border border-slate-200 p-0 bg-transparent shrink-0"
+                  title="Pick color"
+                />
+                <input
+                  type="text"
+                  placeholder="#HEX"
+                  value={newColorHex}
+                  onChange={(e) => setNewColorHex(e.target.value.toUpperCase())}
+                  className="w-full text-xs font-mono bg-slate-50 border border-slate-200 rounded p-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-400"
+                />
+              </div>
+            </div>
+            <button
+              type="submit"
+              disabled={!newColorName.trim() || !newColorHex.trim()}
+              className={`w-full py-1.5 rounded text-xs font-medium transition-colors shadow-xs ${newColorName.trim() && newColorHex.trim()
+                ? 'bg-slate-900 hover:bg-slate-800 text-white cursor-pointer'
+                : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                }`}
+            >
+              + Add to Palette
+            </button>
+          </form>
+        </div>
+
+        {/* 3. Approved Claims */}
         <div className="bg-white border border-slate-200/80 rounded-lg p-4 shadow-xs space-y-3.5 text-xs">
           <div className="flex items-center justify-between pb-2 border-b border-slate-100">
             <span className="font-semibold text-slate-900">Approved Metric Claims</span>
@@ -1113,7 +1310,7 @@ function KnowledgeBaseView({
           </div>
         </div>
 
-        {/* 3. Brand Voice Rules */}
+        {/* 4. Brand Voice Rules */}
         <div className="bg-white border border-slate-200/80 rounded-lg p-4 shadow-xs space-y-3.5 text-xs">
           <div className="flex items-center justify-between pb-2 border-b border-slate-100">
             <span className="font-semibold text-slate-900">Brand Voice Charter</span>
@@ -1155,6 +1352,7 @@ function InsightsView({ sessionIssues = [], onNavigateToWorkspace }) {
     if (t.includes('claim')) return 'claim';
     if (t.includes('tone')) return 'tone';
     if (t.includes('term')) return 'terminology';
+    if (t.includes('visual') || t.includes('color')) return 'visual';
     return 'other';
   };
 
@@ -1162,6 +1360,7 @@ function InsightsView({ sessionIssues = [], onNavigateToWorkspace }) {
   const claimsCount = sessionIssues.filter(i => getCat(i) === 'claim').length;
   const toneCount = sessionIssues.filter(i => getCat(i) === 'tone').length;
   const termCount = sessionIssues.filter(i => getCat(i) === 'terminology').length;
+  const visualCount = sessionIssues.filter(i => getCat(i) === 'visual').length;
   const resolvedCount = sessionIssues.filter(i => i.status === 'resolved').length;
 
   const filteredIssues = filter === 'all'
@@ -1188,10 +1387,10 @@ function InsightsView({ sessionIssues = [], onNavigateToWorkspace }) {
         </button>
       </div>
 
-      {/* 4 Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+      {/* 5 Summary Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
         <div className="bg-white p-3.5 rounded-lg border border-slate-200/80 shadow-xs">
-          <span className="text-[11px] text-slate-500 font-medium">Total Violations Flagged</span>
+          <span className="text-[11px] text-slate-500 font-medium">Total Violations</span>
           <div className="text-2xl font-bold text-slate-900 mt-1 font-mono">{total}</div>
           <span className="text-[10px] text-slate-400 font-mono mt-0.5 block">{resolvedCount} resolved</span>
         </div>
@@ -1209,7 +1408,7 @@ function InsightsView({ sessionIssues = [], onNavigateToWorkspace }) {
 
         <div className="bg-white p-3.5 rounded-lg border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] text-amber-700 font-medium">Tone Mismatches</span>
+            <span className="text-[11px] text-amber-700 font-medium">Tone Voice</span>
             <span className="text-[9px] font-mono px-1 rounded bg-amber-50 text-amber-700 border border-amber-200">Med</span>
           </div>
           <div className="text-2xl font-bold text-slate-900 mt-1 font-mono">{toneCount}</div>
@@ -1228,6 +1427,17 @@ function InsightsView({ sessionIssues = [], onNavigateToWorkspace }) {
             {total > 0 ? Math.round((termCount / total) * 100) : 0}% of volume
           </span>
         </div>
+
+        <div className="bg-white p-3.5 rounded-lg border border-slate-200/80 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] text-purple-700 font-medium">Visual Palette</span>
+            <span className="text-[9px] font-mono px-1 rounded bg-purple-50 text-purple-700 border border-purple-200">Med</span>
+          </div>
+          <div className="text-2xl font-bold text-slate-900 mt-1 font-mono">{visualCount}</div>
+          <span className="text-[10px] text-slate-400 font-mono mt-0.5 block">
+            {total > 0 ? Math.round((visualCount / total) * 100) : 0}% of volume
+          </span>
+        </div>
       </div>
 
       {/* Linear Style Segmented Distribution Sparkline */}
@@ -1236,7 +1446,7 @@ function InsightsView({ sessionIssues = [], onNavigateToWorkspace }) {
           <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium">
             <span>Category Ratio Breakdown</span>
             <span className="font-mono text-slate-600">
-              {claimsCount} claim • {toneCount} tone • {termCount} terminology
+              {claimsCount} claim • {toneCount} tone • {termCount} terminology • {visualCount} visual
             </span>
           </div>
 
@@ -1262,6 +1472,13 @@ function InsightsView({ sessionIssues = [], onNavigateToWorkspace }) {
                 title={`Terminology: ${termCount}`}
               />
             )}
+            {visualCount > 0 && (
+              <div
+                style={{ width: `${(visualCount / total) * 100}%` }}
+                className="bg-purple-500 h-full transition-all"
+                title={`Visual Consistency: ${visualCount}`}
+              />
+            )}
           </div>
         </div>
       )}
@@ -1272,7 +1489,7 @@ function InsightsView({ sessionIssues = [], onNavigateToWorkspace }) {
           <span className="font-semibold text-slate-900">Session Audit Activity Stream</span>
 
           <div className="inline-flex rounded-md bg-slate-100 p-0.5 border border-slate-200/60">
-            {['all', 'claim', 'tone', 'terminology'].map((f) => (
+            {['all', 'claim', 'tone', 'terminology', 'visual'].map((f) => (
               <button
                 key={f}
                 type="button"
@@ -1326,13 +1543,14 @@ function InsightsView({ sessionIssues = [], onNavigateToWorkspace }) {
 // --- Main Application Shell ---
 function BrandSentryApp() {
   const [activeTab, setActiveTab] = useState('review');
-  const [userRole, setUserRole] = useState('Creator'); // 'Creator' | 'Reviewer'
+  const [userRole, setUserRole] = useState('Reviewer'); // 'Creator' | 'Reviewer' (pre-default to Reviewer)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // In-Memory Seed State
   const [glossary, setGlossary] = useState(INITIAL_GLOSSARY);
   const [claims, setClaims] = useState(INITIAL_CLAIMS);
   const [voiceRules, setVoiceRules] = useState(INITIAL_VOICE_RULES);
+  const [palette, setPalette] = useState(INITIAL_PALETTE);
   const [sessionIssues, setSessionIssues] = useState(INITIAL_SESSION_ISSUES);
 
   // Content Items in pipeline
@@ -1340,6 +1558,7 @@ function BrandSentryApp() {
     {
       id: 'ci-init-1',
       text: '',
+      brandColor: '',
       contentType: 'Email',
       submittedAt: null,
       approvedAt: null,
@@ -1350,6 +1569,7 @@ function BrandSentryApp() {
     {
       id: 'ci-preload-pending',
       text: "Welcome to our Onboarding Portal! Our enterprise cloud engine is up to 35% faster in batch-processing tests based on our internal benchmark. Explore all dedicated tools built for our Members.",
+      brandColor: '#1F2A44',
       contentType: 'Email',
       submittedAt: 'Today, 10:30 AM',
       approvedAt: null,
@@ -1364,6 +1584,7 @@ function BrandSentryApp() {
     {
       id: 'ci-preload-approved',
       text: "Announcing the Q3 Release for all Members: experience secure, automated compliance checks directly within the Onboarding Portal.",
+      brandColor: '#FFFFFF',
       contentType: 'Web Page',
       submittedAt: 'Yesterday, 03:45 PM',
       approvedAt: 'Yesterday, 04:30 PM',
@@ -1382,10 +1603,17 @@ function BrandSentryApp() {
     setContentItems(prev => prev.map(item => item.id === currentItem.id ? { ...item, ...patch } : item));
   };
 
-  // Review Content trigger
+  // Review Content trigger (evaluates text + brand color)
   const handleReviewContent = () => {
     if (!currentItem.text.trim()) return;
-    const detected = window.reviewContent(currentItem.text, glossary, claims, voiceRules);
+    const detected = window.reviewContent(
+      currentItem.text,
+      glossary,
+      claims,
+      voiceRules,
+      currentItem.brandColor,
+      palette
+    );
     updateActiveItem({
       issues: detected,
       status: 'in_review'
@@ -1404,6 +1632,23 @@ function BrandSentryApp() {
 
   // Accept issue suggestion
   const handleAcceptIssue = (issue) => {
+    // Visual consistency resolution
+    if (issue.type === 'Visual consistency') {
+      const updatedIssues = currentItem.issues.map(iss =>
+        iss.id === issue.id
+          ? { ...iss, status: 'resolved', resolution: `Updated brand color to ${issue.suggestedRewrite}` }
+          : iss
+      );
+      updateActiveItem({
+        brandColor: issue.suggestedRewrite,
+        issues: updatedIssues
+      });
+      setSessionIssues(prev => prev.map(iss =>
+        iss.id === issue.id ? { ...iss, status: 'resolved' } : iss
+      ));
+      return;
+    }
+
     let updatedText = currentItem.text;
 
     if (issue.type === 'Terminology inconsistency') {
@@ -1449,6 +1694,23 @@ function BrandSentryApp() {
 
   // Custom edit issue
   const handleEditIssue = (issue, customReplacement) => {
+    // Visual consistency custom edit
+    if (issue.type === 'Visual consistency') {
+      const updatedIssues = currentItem.issues.map(iss =>
+        iss.id === issue.id
+          ? { ...iss, status: 'resolved', resolution: `Custom color: "${customReplacement}"` }
+          : iss
+      );
+      updateActiveItem({
+        brandColor: customReplacement.toUpperCase(),
+        issues: updatedIssues
+      });
+      setSessionIssues(prev => prev.map(iss =>
+        iss.id === issue.id ? { ...iss, status: 'resolved' } : iss
+      ));
+      return;
+    }
+
     let updatedText = currentItem.text;
     const reg = new RegExp(window.escapeRegExp(issue.snippet), 'i');
     if (reg.test(updatedText)) {
@@ -1532,12 +1794,25 @@ function BrandSentryApp() {
     setGlossary(prev => prev.filter(item => item.id !== id));
   };
 
+  const handleAddColor = (name, hex) => {
+    const newColor = {
+      id: `p${Date.now()}`,
+      name: name.trim(),
+      hex: (hex.trim().startsWith('#') ? hex.trim() : `#${hex.trim()}`).toUpperCase()
+    };
+    setPalette(prev => [...prev, newColor]);
+  };
+
+  const handleDeleteColor = (id) => {
+    setPalette(prev => prev.filter(item => item.id !== id));
+  };
+
   const pendingCount = contentItems.filter(i => i.status === 'pending_approval').length;
 
   const navItems = [
     { id: 'review', label: 'Review Workspace', icon: FileTextIcon },
     { id: 'approval', label: 'Approval Board', icon: ColumnsIcon, badge: pendingCount > 0 ? pendingCount : undefined },
-    { id: 'knowledge', label: 'Knowledge Base', icon: BookOpenIcon, badge: glossary.length + claims.length + voiceRules.length },
+    { id: 'knowledge', label: 'Knowledge Base', icon: BookOpenIcon, badge: glossary.length + claims.length + voiceRules.length + palette.length },
     { id: 'insights', label: 'Insights', icon: BarChart3Icon, badge: sessionIssues.length }
   ];
 
@@ -1635,6 +1910,7 @@ function BrandSentryApp() {
           <ApprovalBoardView
             contentItems={contentItems}
             userRole={userRole}
+            onRoleChange={setUserRole}
             onApprove={handleApproveItem}
             onSendBack={handleSendBackItem}
             onEditInWorkspace={handleEditInWorkspace}
@@ -1645,8 +1921,11 @@ function BrandSentryApp() {
             glossary={glossary}
             claims={claims}
             voiceRules={voiceRules}
+            palette={palette}
             onAddGlossaryPair={handleAddGlossaryPair}
             onDeleteGlossaryPair={handleDeleteGlossaryPair}
+            onAddColor={handleAddColor}
+            onDeleteColor={handleDeleteColor}
           />
         )}
         {activeTab === 'insights' && (
